@@ -81,7 +81,7 @@
             }
         }
 
-        $grandTotalSkip = !$showNumColumn ? $grandTotalSkip - 1 : $grandTotalSkip;
+        $grandTotalSkip =  $grandTotalSkip - 1;
         ?>
         <div class="wrapper">
             <div class="pb-5">
@@ -110,10 +110,7 @@
                 <table width="100%" class="table">
                     @if ($showHeader)
                     <thead>
-                        <tr>
-                            @if ($showNumColumn)
-                                <th class="left">No</th>
-                            @endif
+                        <tr>       
                             @foreach ($columns as $colName => $colData)
                                 <th class="left">{{ $colName }}</th>
                             @endforeach
@@ -145,10 +142,7 @@
                                 }
 
                                 if ($isOnSameGroup === false) {
-                                    echo '<tr class="bg-black f-white">';
-                                    if ($showNumColumn || $grandTotalSkip > 1) {
-                                        echo '<td colspan="' . ($grandTotalSkip) . '"><b>Grand Total</b></td>';
-                                    }
+                                    echo '<tr class="bg-black f-white">';                                    
                                     $dataFound = false;
                                     foreach ($columns as $colName => $colData) {
                                         if (array_key_exists($colName, $showTotalColumns)) {
@@ -175,10 +169,7 @@
                                 }
                             }
                         ?>
-                        <tr align="center" class="{{ ($no % 2 == 0) ? 'even' : 'odd' }}">
-                            @if ($showNumColumn)
-                                <td class="left">{{ $no }}</td>
-                            @endif
+                        <tr align="center" class="{{ ($no % 2 == 0) ? 'even' : 'odd' }}">                           
                             <?php
                                 $data = $result->toArray();
                                 if (count($data) > count($columns)) array_pop($data);
@@ -196,7 +187,7 @@
                     @endforeach
                     @if ($showTotalColumns != [] && $ctr > 1)
                         <tr class="bg-black f-white">
-                            @if ($showNumColumn || $grandTotalSkip > 1)
+                            @if ($grandTotalSkip > 1)
                                 <td colspan="{{ $grandTotalSkip }}"><b>Grand Total</b></td> {{-- For Number --}}
                             @endif
                             <?php $dataFound = false; ?>
