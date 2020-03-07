@@ -20,11 +20,13 @@ class PdfReport extends ReportGenerator
 		$showHeader = $this->showHeader;
 		$showMeta = $this->showMeta;
 		$applyFlush = $this->applyFlush;
+		$child = $this->child;
+		$maxQtdeCol = $this->maxQtdeCol;
 
 		if ($this->withoutManipulation) {
-			$html = \View::make('laravel-report-generator::without-manipulation-pdf-template', compact('headers', 'columns', 'showTotalColumns', 'query', 'limit', 'groupByArr', 'orientation', 'showHeader', 'showMeta', 'applyFlush'))->render();
+			$html = \View::make('laravel-report-generator::without-manipulation-pdf-template', compact('headers', 'columns', 'showTotalColumns', 'query', 'limit', 'groupByArr', 'orientation', 'showHeader', 'showMeta', 'applyFlush', 'child', 'maxQtdeCol'))->render();
 		} else {
-			$html = \View::make('laravel-report-generator::general-pdf-template', compact('headers', 'columns', 'editColumns', 'showTotalColumns', 'styles', 'query', 'limit', 'groupByArr', 'orientation', 'showHeader', 'showMeta', 'applyFlush'))->render();
+			$html = \View::make('laravel-report-generator::general-pdf-template', compact('headers', 'columns', 'editColumns', 'showTotalColumns', 'styles', 'query', 'limit', 'groupByArr', 'orientation', 'showHeader', 'showMeta', 'applyFlush', 'child', 'maxQtdeCol'))->render();
 		}
 
 		try {
@@ -42,7 +44,6 @@ class PdfReport extends ReportGenerator
 
 		return $pdf->loadHTML($html)->setPaper($this->paper, $orientation);
 	}
-
 	public function stream()
 	{
 		return $this->make()->stream();

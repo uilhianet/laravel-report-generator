@@ -10,6 +10,9 @@
 				margin: 0 -20px 0;
 				padding: 0 15px;
 			}
+			.chil-cabecalho{
+			  border-bottom: 2px dotted black;
+			}
 		    .middle {
 		        text-align: center;
 		    }
@@ -119,7 +122,7 @@
 								<tr>
 									@foreach ($colLine as $colName => $colData)
 			    						@if (array_key_exists($colName, $editColumns))
-			    							<th colspan="{{$editColumns[$colName]['colspan'] ?? 0}}" class="{{ isset($editColumns[$colName]['class']) ? $editColumns[$colName]['class'] : 'left' }}">{{ $colName }}</th>
+			    							<th width="{{$editColumns[$colName]['width'] ?? ''}}" colspan="{{$editColumns[$colName]['colspan'] ?? 1}}" class="{{ isset($editColumns[$colName]['class']) ? $editColumns[$colName]['class'] : 'left' }}">{{ $colName }}</th>
 			    						@else
 				    						<th class="left">{{ $colName }}</th>
 			    						@endif
@@ -132,53 +135,6 @@
 		    		$__env = isset($__env) ? $__env : null;
 					?>
                     @foreach($query->when($limit, function($qry) use($limit) { $qry->take($limit); })->cursor() as $result)
-						<?php
-							if ($limit != null && $ctr == $limit + 1) return false;
-							if ($groupByArr) {
-								$isOnSameGroup = true;
-								foreach ($groupByArr as $groupBy) {
-									if (is_object($columns[$groupBy]) && $columns[$groupBy] instanceof Closure) {
-				    					$thisGroupByData[$groupBy] = $columns[$groupBy]($result);
-				    				} else {
-				    					$thisGroupByData[$groupBy] = $result->{$columns[$groupBy]};
-				    				}
-				    				if (isset($currentGroupByData[$groupBy])) {
-				    					if ($thisGroupByData[$groupBy] != $currentGroupByData[$groupBy]) {
-				    						$isOnSameGroup = false;
-				    					}
-				    				}
-				    				$currentGroupByData[$groupBy] = $thisGroupByData[$groupBy];
-				    			}
-				    			if ($isOnSameGroup === false) {
-		    						echo '<tr class="bg-black f-white">';
-		                            if ($grandTotalSkip > 1) {
-		                                echo '<td colspan="' . $grandTotalSkip . '"><b>Grand Total</b></td>';
-		                            }
-									$dataFound = false;
-	    							foreach ($columns as $colName => $colData) {
-	    								if (array_key_exists($colName, $showTotalColumns)) {
-	    									if ($showTotalColumns[$colName] == 'point') {
-	    										echo '<td class="right"><b>' . number_format($total[$colName], 2, '.', ',') . '</b></td>';
-	    									} else {
-	    										echo '<td class="right"><b>' . strtoupper($showTotalColumns[$colName]) . ' ' . number_format($total[$colName], 2, '.', ',') . '</b></td>';
-	    									}
-	    									$dataFound = true;
-	    								} else {
-	    									if ($dataFound) {
-		    									echo '<td></td>';
-		    								}
-	    								}
-	    							}
-		    						echo '</tr>';
-									// Reset No, Reset Grand Total
-		    						$no = 1;
-		    						foreach ($showTotalColumns as $showTotalColumn => $type) {
-		    							$total[$showTotalColumn] = 0;
-		    						}
-		    						$isOnSameGroup = true;
-		    					}
-			    			}
-						?>
 						@foreach ($columns as $colLine)
 							<tr align="center" class="{{ ($no % 2 == 0) ? 'even' : 'odd' }}">
 								@foreach ($colLine as $colName => $colData)
@@ -194,24 +150,64 @@
 										if (array_key_exists($colName, $editColumns)) {
 											if (isset($editColumns[$colName]['class'])) {
 												$class = $editColumns[$colName]['class'];
-											}
+											}											
 											if (isset($editColumns[$colName]['displayAs'])) {
 												$displayAs = $editColumns[$colName]['displayAs'];
-												if (is_object($displayAs) && $displayAs instanceof Closure) {
-													$displayedColValue = $displayAs($result);
-												} elseif (!(is_object($displayAs) && $displayAs instanceof Closure)) {
-													$displayedColValue = $displayAs;
-												}
+												$displayedColValue = $displayAs($displayedColValue);												
 											}
 										}
 										if (array_key_exists($colName, $showTotalColumns)) {
 											$total[$colName] += $generatedColData;
 										}
 									?>
-									<td colspan="{{$editColumns[$colName]['colspan'] ?? 0}}" class="{{ $class }}">{{ $displayedColValue }}</td>
+									<td width="{{$editColumns[$colName]['width'] ?? ''}}" colspan="{{$editColumns[$colName]['colspan'] ?? 1}}" class="{{ $class }}">{{ $displayedColValue }}</td>
 								@endforeach
-							</tr>
+							</tr>							
 						@endforeach
+						@if ($child != null && count($child) > 0)
+								@foreach ($child as $childKey => $childData)
+									<tr align="center" class="{{ ($no % 2 == 0) ? 'even' : 'odd' }}">
+										<td colspan="{{ $maxQtdeCol }}">
+											<table width="100%" class="table" style="padding-left:10px;padding-top:3px;padding-bottom:14px;padding-right:10px">
+												<thead class="chil-cabecalho">					
+													<tr >	
+														@foreach ($childData as $colName => $colData)			
+															<th width="{{$editColumns[$colName]['width'] ?? ''}}" class="{{ $editColumns[$colName]['class'] ?? 'left'}}">{{ $colName }}</th>
+														@endforeach
+													</tr>
+												</thead>
+												@if(isset($result->{$childKey}))
+													@foreach ($result->{$childKey} as $valueChild)
+														<tr>
+															@foreach ($childData as $colName => $colData)
+																<?php
+																	$class = 'left';											
+																	if (is_object($colData) && $colData instanceof Closure) {
+																		$generatedChilData = $colData($valueChild,$result);
+																	} else {
+																		$generatedChilData = $valueChild->{$colData};
+																	}
+																	$displayedChilValue = $generatedChilData;
+																	if (array_key_exists($colName, $editColumns)) {
+																		if (isset($editColumns[$colName]['class'])) {
+																			$class = $editColumns[$colName]['class'];
+																		}																		
+																		if (isset($editColumns[$colName]['displayAs'])) {
+																			$displayAs = $editColumns[$colName]['displayAs'];
+																			$displayedChilValue = $displayAs($displayedChilValue);
+																		}
+																	}
+																?>
+																<td width="{{$editColumns[$colName]['width'] ?? ''}}" class="{{ $class }}">{{ $displayedChilValue }}</td>
+															@endforeach
+														</tr>
+													@endforeach	
+												@endif
+											</table>
+										</td>
+									</tr>
+								@endforeach
+							@endif
 		    			<?php $ctr++; $no++; ?>
 		    		@endforeach
 					@if ($showTotalColumns != [] && $ctr > 1)

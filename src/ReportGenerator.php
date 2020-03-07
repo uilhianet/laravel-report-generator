@@ -14,20 +14,22 @@ class ReportGenerator
 	protected $groupByArr = [];
 	protected $paper = 'a4';
 	protected $orientation = 'portrait';
-	protected $editColumns = [];	
+	protected $editColumns = [];
 	protected $showTotalColumns = [];
 	protected $styles = [];
 	protected $simpleVersion = false;
 	protected $withoutManipulation = false;
 	protected $showMeta = true;
 	protected $showHeader = true;
+	protected $child = null;
+	protected $maxQtdeCol = 0;
 
 	public function __construct()
 	{
 		$this->applyFlush = (bool) Config::get('report-generator.flush', true);
 	}
 
-	public function of($title, array $meta = [], $query, array $columns)
+	public function of($title, array $meta = [], $query, array $columns, array $child = null)
 	{
 		$this->headers = [
 			'title' => $title,
@@ -36,6 +38,9 @@ class ReportGenerator
 
 		$this->query = $query;
 		$this->columns = $this->mapColumns($columns);
+		if ($child) {
+			$this->child = $this->mapChild($child);
+		}
 		return $this;
 	}
 
@@ -52,7 +57,7 @@ class ReportGenerator
 
 		return $this;
 	}
-	
+
 	public function simple()
 	{
 		$this->simpleVersion = true;
@@ -71,6 +76,23 @@ class ReportGenerator
 	{
 		$result = [];
 		foreach ($columns as $colIndex => $colLine) {
+			if (count($colLine) > $this->maxQtdeCol) {
+				$this->maxQtdeCol = count($colLine);
+			}
+			foreach ($colLine as $name => $data) {
+				if (is_int($name)) {
+					$result[$colIndex][$data] = snake_case($data);
+				} else {
+					$result[$colIndex][$name] = $data;
+				}
+			}
+		}
+		return $result;
+	}
+	private function mapChild(array $chil)
+	{
+		$result = [];
+		foreach ($chil as $colIndex => $colLine) {
 			foreach ($colLine as $name => $data) {
 				if (is_int($name)) {
 					$result[$colIndex][$data] = snake_case($data);
